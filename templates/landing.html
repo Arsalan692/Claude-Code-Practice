@@ -6,19 +6,21 @@
 
 <section class="hero">
     <div class="hero-inner">
-        <div class="hero-badge">Personal Finance Tracker</div>
+        <div class="hero-badge">Your Money, Decoded</div>
         <h1 class="hero-title">
-            Know where your<br>
-            <em>money goes</em>
+            Stop wondering where<br>
+            it <em>went</em>.
         </h1>
         <p class="hero-subtitle">
-            Log expenses, understand your spending patterns,
-            and take control of your financial life —
-            one transaction at a time.
+            Every swipe, every rupee, every "where did my salary go"
+            moment — Spendly turns the chaos into one clear picture.
+            No spreadsheets. No guesswork. Just clarity.
         </p>
         <div class="hero-actions">
             <a href="{{ url_for('register') }}" class="btn-primary">Start tracking free</a>
-            <a href="{{ url_for('login') }}" class="btn-ghost">Sign in</a>
+            <button type="button" class="btn-ghost btn-how-it-works" data-modal-trigger="how-it-works">
+                <span class="play-icon">▶</span> How it works
+            </button>
         </div>
     </div>
     <div class="hero-visual">
@@ -60,6 +62,14 @@
         </div>
     </div>
 </section>
+
+<div class="modal-overlay" id="how-it-works-modal" hidden>
+    <div class="modal-box">
+        <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
+        <h3 class="modal-title">See Spendly in action</h3>
+        <div class="modal-video" id="how-it-works-video"></div>
+    </div>
+</div>
 
 <section class="features">
     <div class="features-inner">
