@@ -1,5 +1,6 @@
 import os
 import sqlite3
+from datetime import datetime
 from functools import wraps
 
 from flask import Flask, render_template, request, redirect, url_for, session
@@ -128,7 +129,69 @@ def logout():
 @app.route("/profile")
 @login_required
 def profile():
-    return "Profile page — coming in Step 4"
+    conn = get_db()
+    try:
+        user = conn.execute(
+            "SELECT name, email, created_at FROM users WHERE id = ?",
+            (session["user_id"],),
+        ).fetchone()
+        stats = conn.execute(
+            "SELECT COUNT(*) AS count, COALESCE(SUM(amount), 0) AS total "
+            "FROM expenses WHERE user_id = ?",
+            (session["user_id"],),
+        ).fetchone()
+        category_rows = conn.execute(
+            "SELECT category, SUM(amount) AS total FROM expenses "
+            "WHERE user_id = ? GROUP BY category ORDER BY total DESC",
+            (session["user_id"],),
+        ).fetchall()
+        expense_rows = conn.execute(
+            "SELECT amount, category, date, description FROM expenses "
+            "WHERE user_id = ? ORDER BY date DESC, id DESC LIMIT 10",
+            (session["user_id"],),
+        ).fetchall()
+    finally:
+        conn.close()
+
+    initials = "".join(part[0].upper() for part in user["name"].split()[:2])
+    member_since = datetime.strptime(
+        user["created_at"], "%Y-%m-%d %H:%M:%S"
+    ).strftime("%B %Y")
+
+    total_spent = stats["total"]
+    category_breakdown = []
+    for i, row in enumerate(category_rows):
+        percent = (row["total"] / total_spent * 100) if total_spent else 0
+        cycle = i % 8
+        category_breakdown.append({
+            "name": row["category"],
+            "total": row["total"],
+            "percent": round(percent, 1),
+            "bar_class": "" if cycle == 0 else f"mock-bar-{cycle + 1}",
+        })
+
+    recent_expenses = [
+        {
+            "date_display": datetime.strptime(row["date"], "%Y-%m-%d").strftime("%b %d, %Y"),
+            "category": row["category"],
+            "description": row["description"],
+            "amount": row["amount"],
+        }
+        for row in expense_rows
+    ]
+    has_more = stats["count"] > len(recent_expenses)
+
+    return render_template(
+        "profile.html",
+        user=user,
+        initials=initials,
+        member_since=member_since,
+        expense_count=stats["count"],
+        total_spent=total_spent,
+        category_breakdown=category_breakdown,
+        recent_expenses=recent_expenses,
+        has_more=has_more,
+    )
 
 
 @app.route("/expenses/add")
